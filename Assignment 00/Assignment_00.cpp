@@ -12,6 +12,6 @@ int main(){
     else{
         std::cout<<num1 - num2<<std::endl;
     }
-
+    
     return 0;
 }
