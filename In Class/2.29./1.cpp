@@ -8,4 +8,4 @@ int main(){
     std::cout<<sizeof y<<std::endl;
     std::cout<<sizeof z<<std::endl;
     return 0;
-}
+}N
