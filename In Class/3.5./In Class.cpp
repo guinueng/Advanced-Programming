@@ -21,3 +21,9 @@ int main(){
 // If we define x 1 + 1 and return x*x > preprocess will return 1 + 1 * 1 + 1 = 3.
 // g++ -S "File name" > creates .s file which is assembly file.
 // linker error contains 'ld' reference.
+// CXXFLAGS = use this when you compile it. = | += >if exist cxxflags ow or add? Does not effect on class.
+// Exe name: Tab(no spacebar) target .o file
+// g++ -o $@ $^
+//        name of 1st target name, 2nd name 
+// make > TA will type.
+// Modified

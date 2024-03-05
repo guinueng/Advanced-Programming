@@ -5,4 +5,4 @@ long fact(long n){
     }
 
     return ans;
-}
+}//Modify
