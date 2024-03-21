@@ -13,7 +13,7 @@ int sum(int const* x, size_t size){ // size_t is used for notate index or size.
     int total = 0;
     for(size_t i = 0; i < size; i++)
         total += x[i];
-    x[0] = 10; // > Compiler will terminate it.
+    //x[0] = 10; // > Compiler will terminate it.
     return total;
 }
 
