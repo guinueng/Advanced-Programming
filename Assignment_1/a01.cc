@@ -20,52 +20,76 @@ static size_t find_silence(string filename, double* times, size_t max_n){
     size_t offset = 0;
     //cout << tmp_size << endl;
     size_t i = 0;
+    bool lasting = false;
+
     for(size_t i = 0; i < (wav_len / wav_sample_rate) * 2; i++){
         short tmp_sample[wav_sample_rate]; // Temporary array to store data of 1.5s audio due to sample rate.
         size_t count = 0; // Calculate length of silence.
         size_t start_pos = 0;
-        cout << "Offset : " << offset << endl;
-        if( (wav_len - offset + wav_sample_rate) <= wav_sample_rate){
-            size_t mod_length = (wav_len - offset + wav_sample_rate);
-            cout << "Mod : " << mod_length << endl;
-            wav_file_data(filename, tmp_sample, offset, mod_length);
-        }
+        cout << "Offset : " << offset << " Lasting : " << lasting;
+        size_t sample_size = 0;
+        
+        if(offset + wav_sample_rate > wav_len)
+            sample_size = wav_len - offset - 44;
         else
-            wav_file_data(filename, tmp_sample, offset, wav_sample_rate);
+            sample_size = wav_sample_rate;
+        wav_file_data(filename, tmp_sample, offset, sample_size);
 
-        for(size_t t = 0; t < wav_sample_rate; t++){
+        if(abs(tmp_sample[0]) >= 1000)
+            lasting = false;
+        cout << " After lasting : " << lasting << endl << "Starting pos : " << (double)offset / wav_sample_rate << " Ending pos : " << (double)(offset + wav_sample_rate) / wav_sample_rate << endl;
+        for(size_t t = 0; t < sample_size; t++){
             size_t amplitude = abs(tmp_sample[t]);
 
             if(peak_amplitude < amplitude)
                 peak_amplitude = amplitude;
             //cout << "Amplitude : " << amplitude;
             if(amplitude < 1000){
-                if(count == 0)
+                if(count == 0){
                     start_pos = (offset + t);
+                }
                 count++;
+                if(t == sample_size - 1 && count >= wav_sample_rate * 0.5 && t < offset + wav_sample_rate * 0.5 && lasting == false){
+                    lasting = true;
+                    cout << "Lasting. Start point : " << (double)start_pos / wav_sample_rate << "Duration : " << (double)count / wav_sample_rate << endl << endl;
+                    if(t_count < 10){
+                        times[t_count] = (double)start_pos / wav_sample_rate;
+                        t_count++;
+                    }
+                    else
+                        return peak_amplitude;
+                }
             }
             else{
                 //cout << "Count : " << count << endl;
-                if(count >= wav_sample_rate * 0.5){
+                if(lasting){
+                    if(t < wav_sample_rate * 0.5)
+                        lasting = false;
+                        //cout << "Lasting end at " << (double)(offset + t) / wav_sample_rate << endl;
+                    // cout << "Connected silence" << endl;
+                }
+                else if(count >= wav_sample_rate * 0.5){
                     cout << "Start pos : " << start_pos << endl;
                     double init_pos = (double)((double)start_pos / (double)wav_sample_rate);
                     cout << "Pos : " << init_pos << endl;
                     
-                    times[t_count] = init_pos;
-                    t_count++;
+                    if(t_count > 10)
+                        return peak_amplitude;
+                    else{
+                        times[t_count] = init_pos;
+                        t_count++;
+                    }
                 }
-
                 count = 0;
             }
         }
-
         offset += (wav_sample_rate * 0.5);
     }
 
     return peak_amplitude;
 }
 
-int main (){
+int main(){
     // Need to print peak amplitude and list of starting time of silence(s) -> Duration is at least 0.5s.
     string filename;
     cout << "Enter filename: " << flush; // Part that program asks target wav file name.
@@ -82,7 +106,10 @@ int main (){
     cout << "Periods of silence: " << endl;
     cout << setprecision(4) << fixed;
     for(size_t i = 0; i < 10; i++){
-        cout << silence_pos[i] << endl;
+        if(silence_pos[i] > 0)
+            cout << silence_pos[i] << endl;
+        else
+            break;
     }
 
     return 0;
