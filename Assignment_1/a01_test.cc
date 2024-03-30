@@ -21,6 +21,7 @@ static size_t find_silence(string filename, double* times, size_t max_n){
         short tmp_sample[wav_sample_rate]; // Temporary array to store data of 1.5s audio due to sample rate.
         size_t count = 0; // Calculate length of silence.
         size_t start_pos = 0; // Variable that I can store starting seconds of silence.
+        cout << "Offset : " << offset << " Lasting : " << lasting << endl;
         size_t sample_size = 0; // Variable that I want to store how long that we have to calculate.
         
         if(offset + wav_sample_rate > wav_len) // If last part of data is smaller than given file's sample rate, calculate last length.
@@ -31,6 +32,27 @@ static size_t find_silence(string filename, double* times, size_t max_n){
 
         if(abs(tmp_sample[0]) >= 1000) // If first element of array is bigger than silence range, we can consider silence does not last.
             lasting = false;
+
+        if(((double)offset / wav_sample_rate) == 3.5){ // Test func.
+            size_t tmp_c = 0;
+            size_t tmp_pos = 0;
+            for(size_t i = 0; i < wav_sample_rate; i++){
+                size_t tmp = abs(tmp_sample[i]);
+                if(tmp < 1000){
+                    tmp_c++;
+                    if(tmp_c == 1)
+                        tmp_pos = offset + i;
+                }
+                else{
+                    if(tmp_c != 0)
+                        cout << "Duration : " << tmp_c << " Second : " << tmp_pos / (double)wav_sample_rate << endl;
+                    tmp_c = 0;
+                }
+            }
+            if(tmp_c != 0)
+                cout << "Duration : " << tmp_c << " Second : " << tmp_pos / (double)wav_sample_rate << endl;
+            cout << endl;
+        }
 
         for(size_t t = 0; t < sample_size; t++){ // Calculating 1s duration, due to we check 0.5s duration with another 0.5s.
             size_t amplitude = abs(tmp_sample[t]); // Calculate amplitude by using abs function.
@@ -46,6 +68,7 @@ static size_t find_silence(string filename, double* times, size_t max_n){
                     // If program checked last part of given range, and it is silence status.
                     // Also, it is away lower than 0.5s which we can check another 0.5s and does not last, we can consider it would be last and contain value into times array. 
                     lasting = true; // Set lasting true.
+                    cout << "Lasting. Start point : " << (double)start_pos / wav_sample_rate << "Duration : " << (double)count / wav_sample_rate << endl << endl;
                     if(t_count < 10){ // Check if array is not full, and it is, fill the array with starting seconds.
                         times[t_count] = (double)start_pos / wav_sample_rate;
                         t_count++;
