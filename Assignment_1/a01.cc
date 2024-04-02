@@ -50,8 +50,7 @@ static size_t find_silence(string filename, double* times, size_t max_n){
                         times[t_count] = (double)start_pos / wav_sample_rate;
                         t_count++;
                     }
-                    else // If array is fulled, return peak_amplitude values.
-                        return peak_amplitude;
+                    // If array is fulled do nothing.
                 }
             }
             else{
@@ -62,15 +61,19 @@ static size_t find_silence(string filename, double* times, size_t max_n){
                 else if(count >= wav_sample_rate * 0.5){
                     double init_pos = (double)start_pos / wav_sample_rate; // Calculate starting position.
                     
-                    if(t_count > 10) // If whole array is full, return peak_amplitude result.
-                        return peak_amplitude;
-                    else{ // Else, when array is empty, fill the value into array.
+                    if(t_count < 10){ // If array has empty space, fill the value into array.
                         times[t_count] = init_pos;
                         t_count++;
                     }
+                    // If array is fulled, do nothing.
                 }
                 count = 0; // Reset duration of silence as 0.
             }
+            /*
+                For first submission, I use break when array is fulled.
+                But there's mis consideration that peak amplitude may update after array is fulled.
+                Thus, I deleted return peak_amplitude during calculation of peak amplitude and silence.
+            */
         }
         offset += (wav_sample_rate * 0.5); // Update check range as 0.5s increasing each elements.
     }
