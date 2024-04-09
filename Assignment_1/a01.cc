@@ -17,16 +17,16 @@ static size_t find_silence(string filename, double* times, size_t max_n){
     size_t offset = 0; // Variables that how many offsets to calculate.
     bool lasting = false; // Condition to check silence is lasting another 0.5s or not.
 
-    for(size_t i = 0; i < (wav_len / wav_sample_rate) * 2; i++){
-        short tmp_sample[wav_sample_rate]; // Temporary array to store data of 1.5s audio due to sample rate.
+    for(size_t i = 0; i < (wav_len / 1000) * 2; i++){
+        short tmp_sample[1001]; // Temporary array to store data of 1.5s audio due to sample rate.
         size_t count = 0; // Calculate length of silence.
         size_t start_pos = 0; // Variable that I can store starting seconds of silence.
         size_t sample_size = 0; // Variable that I want to store how long that we have to calculate.
         
-        if(offset + wav_sample_rate > wav_len) // If last part of data is smaller than given file's sample rate, calculate last length.
+        if(offset + 1000 > wav_len) // If last part of data is smaller than given file's sample rate, calculate last length.
             sample_size = wav_len - offset - 44;
         else // If it does not or normal case, consider sample size as file's sample rate.
-            sample_size = wav_sample_rate;
+            sample_size = 1000;
         wav_file_data(filename, tmp_sample, offset, sample_size); // Bring wav_file_data.
 
         if(abs(tmp_sample[0]) >= 1000) // If first element of array is bigger than silence range, we can consider silence does not last.
@@ -42,7 +42,7 @@ static size_t find_silence(string filename, double* times, size_t max_n){
                 if(count == 0) // If first case of amplitude is inside of silence range, check starting seconds.
                     start_pos = (offset + t);
                 count++; // Increase count to increase duration of silence.
-                if(t == sample_size - 1 && count >= wav_sample_rate * 0.5 && t < offset + wav_sample_rate * 0.5 && lasting == false){
+                if(t == sample_size - 1 && count >= 1000 * 0.5 && t < offset + 1000 * 0.5 && lasting == false){
                     // If program checked last part of given range, and it is silence status.
                     // Also, it is away lower than 0.5s which we can check another 0.5s and does not last, we can consider it would be last and contain value into times array. 
                     lasting = true; // Set lasting true.
