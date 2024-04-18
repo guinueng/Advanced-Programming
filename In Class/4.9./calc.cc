@@ -78,9 +78,12 @@ number sum(number const* nums, size_t num_nums){
 int main(){ // If using reference &, when using it always dereference it and it is implicit.
     number a = { .type = number::number_type::integer, .int_value = 3};
     number b = { .type = number::number_type::rational, .fraction = { 9, 7 } };
+    number arr[2] = { { .type = number::number_type::integer, .int_value = 3 }, { .type = number::number_type::rational, .fraction = { 9, 7 } } };
+
     #define F(x)    { .type = number::number_type::real, .real_value = x }
     number const xs[] = { F(3), F(9.5), F(-10), F(27) };
     cout << (a + b) << endl;
+    cout << (arr[0] + arr[1]) << endl;
     cout << sum(xs, (sizeof(xs) / sizeof(xs[0])) ) << endl;
 
     return 0;
