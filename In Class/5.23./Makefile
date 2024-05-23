@@ -5,5 +5,11 @@ LDFLAGS += $(SANFLAGS)
 .phony:	all
 all:	main00-bin main01-bin main02-bin main03-bin main04-bin main05-bin main06-bin main07-bin main08-bin main09-bin main10-bin
 
+sum:	sum.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 %-bin:	%.o widget.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+array-main:	array-main.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
