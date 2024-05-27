@@ -57,15 +57,15 @@ double division::eval_at(long x) const{
 }
 
 expr* addition::copy() const{
-    return new addition(this -> first, this -> second);
+    return new addition(this -> first -> copy(), this -> second -> copy());
 }
 
 expr* multiplication::copy() const{
-    return new multiplication(this -> first, this -> second);
+    return new multiplication(this -> first -> copy(), this -> second -> copy());
 }
 
 expr* division::copy() const{
-    return new division(this -> first, this -> second);
+    return new division(this -> first -> copy(), this -> second -> copy());
 }
 
 expr* monomial::derivative() const{
@@ -82,7 +82,7 @@ expr* addition::derivative() const{
 }
 
 expr* multiplication::derivative() const{
-    return new addition(new multiplication(this -> first -> derivative(), this -> second -> copy()), new multiplication(this -> first -> copy(), this -> second -> derivative()));
+    return new addition(new multiplication(this -> first -> derivative(), this -> second -> copy()), new multiplication(this -> first -> copy(), this -> second-> derivative()));
 }
 
 expr* division::derivative() const{
