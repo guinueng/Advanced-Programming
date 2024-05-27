@@ -16,15 +16,16 @@ int main(){
     cin >> x;
     cout << "f(" << x << ") = " << e -> eval_at(x) << endl;
     
-    delete e;
-    /*
-    expr* deriv =  e2 -> derivative();
-    expr *derive2 = derive -> optimize();
-    delete deriv;
+    //expr* deriv =  e2 -> derivative();
+    //expr *derive2 = derive -> optimize();
+    expr* deriv =  e -> derivative();
+    //delete deriv;
 
-    cout << "f(x) = " << *deriv2 << endl;
-    cout << "f(" << x << ") = " << deriv -> eval_at(x) << endl;
-    delete drive2;*/
+    cout << "f'(x) = " << deriv << endl;
+    cout << "f'(" << x << ") = " << deriv -> eval_at(x) << endl;
+    //delete drive2;
+    delete e;
+    delete deriv;
     //delete e2;
 
     return 0;

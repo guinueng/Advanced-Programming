@@ -31,7 +31,8 @@ class expr{
     friend std::ostream& operator<<(std::ostream&, expr*);
     virtual std::ostream& print(std::ostream&) const = 0;
     virtual double eval_at(long) const = 0;
-    //virtual long derivative(long) const = 0;
+    virtual expr* derivative() const = 0;
+    virtual expr* copy() const = 0;
     virtual ~expr() {}
 };
 
@@ -49,7 +50,8 @@ class int_literal : public expr {
     public: // 내부 출력 함수 만들기
     int_literal(long e): int_val(e) {}
     double eval_at(long x) const override { return this -> int_val; };
-    //long derivative(long x) const override { return 0; }
+    expr* derivative() const override { return new int_literal(0); };
+    expr* copy() const override { return new int_literal(this -> int_val); };
     std::ostream& print(std::ostream& out) const { out << this -> int_val; return out; };
 };
 
@@ -58,6 +60,8 @@ class monomial : public expr{
     public:
     monomial(long e) : exp(e) {}
     double eval_at(long x) const override { return pow(x, this -> exp); };
+    expr* derivative() const override;
+    expr* copy() const override { return new monomial(this -> exp); };
     std::ostream& print(std::ostream& out) const;
 };
 
@@ -75,6 +79,8 @@ class addition : public exp_var{
     public:
     addition(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input) {}
     double eval_at(long) const override;
+    expr* derivative() const override;
+    expr* copy() const override;
     std::ostream& print(std::ostream&) const override;
 };
 
@@ -82,6 +88,8 @@ class multiplication : public exp_var{
     public:
     multiplication(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input) {}
     double eval_at(long) const override;
+    expr* derivative() const override;
+    expr* copy() const override;
     std::ostream& print(std::ostream&) const override;
 };
 
@@ -89,6 +97,8 @@ class division : public exp_var{
     public:
     division(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input) {}
     double eval_at(long) const override;
+    expr* derivative() const override;
+    expr* copy() const override;
     std::ostream& print(std::ostream&) const override;
 };
 
