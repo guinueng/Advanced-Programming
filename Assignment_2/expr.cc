@@ -1,4 +1,5 @@
 #include "expr.h"
+#include <utility>
 
 using namespace std;
 
@@ -21,12 +22,19 @@ std::ostream& monomial::print(std::ostream& out) const{
     return out;
 }
 
+exp_var::exp_var(exp_var const& other) : expr(other.type), first(other.first->copy()), second(other.second->copy()) {}
+
 ostream& addition::print(ostream& out) const{
-    out << "(";
+    // addition* left__add = dynamic_cast<addition*>(this -> left); > compiler checks what object is pointing to.
+    if(this -> first -> type_check() != expr::func_type::int_literal || this -> second -> type_check() != expr::func_type::int_literal ||
+        this -> first -> type_check() != expr::func_type::monomial || this -> second -> type_check() != expr::func_type::monomial)
+        out << "(";
     this -> first -> print(out);
     out << " + ";
     this -> second -> print(out);
-    out << ")";
+    if(this -> first -> type_check() != expr::func_type::int_literal || this -> second -> type_check() != expr::func_type::int_literal ||
+        this -> first -> type_check() != expr::func_type::monomial || this -> second -> type_check() != expr::func_type::monomial)
+        out << ")";
     return out;
 }
 
@@ -87,4 +95,60 @@ expr* multiplication::derivative() const{
 
 expr* division::derivative() const{
     return new division(new addition(new multiplication(this -> first -> derivative(), this -> second -> copy()), new multiplication(new int_literal(-1), new multiplication(this -> first -> copy(), this -> second -> derivative()))), new multiplication(this -> second -> copy(), this -> second -> copy()));
+}
+
+expr* addition::optimize(){
+    if(this -> first -> type_check() == expr::func_type::int_literal){
+        if(this -> first -> value() == 0)
+            return this -> second -> copy();
+        else if(this -> second -> type_check() == expr::func_type::int_literal)
+            return new int_literal( this -> first -> value() + this -> second -> value() );
+    }
+    if(this -> second -> type_check() == expr::func_type::int_literal){
+        if(this -> second -> value() == 0)
+            return this -> first -> copy();
+    }
+    if(this -> first -> type_check() == expr::func_type::monomial && this -> second -> type_check() == expr::func_type::monomial){
+        if(this -> first -> value() == this -> second -> value())
+            return new multiplication( new int_literal(2), this -> first -> copy() );
+    }
+    return new addition( this -> first -> optimize(), this -> second -> optimize() );
+    //return this -> copy();
+    //__builtin_unreachable();
+}
+
+expr* multiplication::optimize(){
+    if(this -> first -> type_check() == expr::func_type::int_literal){
+        if(this -> first -> value() == 0)
+            return new int_literal(0);
+        if(this -> second -> type_check() == expr::func_type::int_literal){
+            cout << "Target" << endl;
+            return new int_literal( this -> first -> value() * this -> second -> value() );}
+    }
+    if(this -> second -> type_check() == expr::func_type::int_literal){
+        if(this -> second -> value() == 0)
+        return new int_literal(0);
+    }
+    if(this -> first -> type_check() == expr::func_type::monomial && this -> second -> type_check() == expr::func_type::monomial){
+        return new monomial( this -> first -> value() + this -> second -> value() );
+    }
+
+    return new multiplication( this -> first -> optimize(), this -> second -> optimize() );
+    //return this -> copy();
+    //__builtin_unreachable();
+}
+
+expr* division::optimize(){
+    if(this -> first -> type_check() == expr::func_type::int_literal){
+        if(this -> first -> value() == 0)
+            return new int_literal(0);
+        else if(this -> second -> type_check() == expr::func_type::int_literal)
+            return new int_literal( this -> first -> value() / this -> second -> value() );
+    }
+    if(this -> first -> type_check() == expr::func_type::monomial && this -> second -> type_check() == expr::func_type::monomial)
+        return new monomial( this -> first -> value() - this -> second -> value() );
+
+    return new division( this -> first -> optimize(), this -> second -> optimize() );
+    //return this -> copy();
+    //__builtin_unreachable();
 }

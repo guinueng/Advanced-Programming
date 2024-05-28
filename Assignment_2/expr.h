@@ -4,64 +4,45 @@
 #include <iostream>
 #include <math.h>
 
-/*class expr{
-    protected:
-    enum class func_type { integer, expression } type;
-    union{
-        long int_val;
-        struct{
-            expr* first;
-            expr* second;
-        } mem_add;
-    };
-    expr(long input_val) : int_val(input_val), type(func_type::integer) {}
-    expr(expr* f_input, expr* s_input) : mem_add{ .first = f_input, .second = s_input }, type(func_type::expression) {}
-    public:
-    //virtual expr* optimize() = 0;
-    friend std::ostream& operator<<(std::ostream&, expr*);
-    virtual std::ostream& print(std::ostream&) const = 0;
-    //virtual void operator<< () const = 0;
-    //virtual expr* eval_at() = 0;
-    //virtual expr* derivative() = 0;
-    virtual ~expr() {}
-};*/
-
 class expr{
+    protected:
+    enum class func_type { int_literal, monomial, addition, multiplication, division } type;
+    expr(func_type t) : type(t) {}
     public:
     friend std::ostream& operator<<(std::ostream&, expr*);
     virtual std::ostream& print(std::ostream&) const = 0;
     virtual double eval_at(long) const = 0;
     virtual expr* derivative() const = 0;
     virtual expr* copy() const = 0;
+    virtual expr* optimize() = 0;
+    virtual long value() const { return 0; };
+    func_type type_check() { return type; };
     virtual ~expr() {}
 };
 
-std::ostream& operator<<(std::ostream&, expr*); // 출력 함수 여기서 쓰기
-
-/*class int_var : public expr{
-    long int_val;
-    public:
-    int_var(long val) : int_val(val) {}
-    
-};*/
+std::ostream& operator<<(std::ostream&, expr*);
 
 class int_literal : public expr {
     long int_val;
-    public: // 내부 출력 함수 만들기
-    int_literal(long e): int_val(e) {}
+    public:
+    int_literal(long e): expr(expr::func_type::int_literal), int_val(e) {}
     double eval_at(long x) const override { return this -> int_val; };
     expr* derivative() const override { return new int_literal(0); };
     expr* copy() const override { return new int_literal(this -> int_val); };
+    expr* optimize() override { return this -> copy(); };
+    long value() const { return this -> int_val; };
     std::ostream& print(std::ostream& out) const { out << this -> int_val; return out; };
 };
 
 class monomial : public expr{
     long exp;
     public:
-    monomial(long e) : exp(e) {}
+    monomial(long e) : expr(expr::func_type::monomial), exp(e) {}
     double eval_at(long x) const override { return pow(x, this -> exp); };
     expr* derivative() const override;
     expr* copy() const override { return new monomial(this -> exp); };
+    expr* optimize() override { return this -> copy(); };
+    long value() const { return this -> exp; };
     std::ostream& print(std::ostream& out) const;
 };
 
@@ -70,35 +51,39 @@ class exp_var : public expr{
     expr* first;
     expr* second;
     public:
-    exp_var(expr* first, expr* second) : first(first), second(second) {}
-    ~exp_var() { delete first; delete second; }
+    exp_var(expr* const first, expr* const second, expr::func_type t) : expr(t), first(first), second(second) {}
+    exp_var(exp_var const& other);
     virtual std::ostream& print(std::ostream&) const = 0;
+    ~exp_var() { delete first; delete second; }
 };
 
 class addition : public exp_var{
     public:
-    addition(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input) {}
+    addition(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input, expr::func_type::addition) {}
     double eval_at(long) const override;
     expr* derivative() const override;
     expr* copy() const override;
+    expr* optimize() override;
     std::ostream& print(std::ostream&) const override;
 };
 
 class multiplication : public exp_var{
     public:
-    multiplication(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input) {}
+    multiplication(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input, expr::func_type::multiplication) {}
     double eval_at(long) const override;
     expr* derivative() const override;
     expr* copy() const override;
+    expr* optimize() override;
     std::ostream& print(std::ostream&) const override;
 };
 
 class division : public exp_var{
     public:
-    division(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input) {}
+    division(expr* const f_input, expr* const s_input) : exp_var(f_input, s_input, expr::func_type::division) {}
     double eval_at(long) const override;
     expr* derivative() const override;
     expr* copy() const override;
+    expr* optimize() override;
     std::ostream& print(std::ostream&) const override;
 };
 
