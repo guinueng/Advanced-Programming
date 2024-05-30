@@ -18,7 +18,10 @@ class pointer{ // Unique pointer. Not completed rule of 3. -> Not possible to co
 };
 
 int main(){
-    unique_ptr<int> x(new int);
+    //unique_ptr<int> x(new int);
+    //unique_ptr<int> y = x; not allowed on unique mem model.
+    shared_ptr<int> x(new int);
+    shared_ptr<int> y = x; // This works. Cause it shares same data. -> has integer count, check how many usage of mem and if count == 0, delete mem. Referencing each can't be deleted.
     //pointer<int> x = new int; // Need unary constructor.
     *x = 5;
     cout << *x << endl;
