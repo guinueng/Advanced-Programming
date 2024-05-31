@@ -9,18 +9,13 @@ ostream& operator<<(ostream& out, expr* e){
 }
 
 std::ostream& monomial::print(std::ostream& out) const{
-    if(this -> exp >= 1){
+    if(this -> exp != 0){
         out << "x";
         if(this -> exp > 1)
             out << this -> exp;
     }
-    else if(this -> exp == 0)
+    else
         out << "1";
-    else{
-        out << "1 / " << "x";
-        if(this -> exp != -1)
-            out << abs(this -> exp);
-    }
     return out;
 }
 
@@ -147,10 +142,8 @@ expr* multiplication::optimize(){
     if(this -> first -> type_check() == expr::func_type::int_literal){
         if(this -> first -> value() == 0)
             return new int_literal(0);
-        if(this -> second -> type_check() == expr::func_type::int_literal){
-            cout << "Target" << endl;
+        if(this -> second -> type_check() == expr::func_type::int_literal)
             return new int_literal( this -> first -> value() * this -> second -> value() );
-        }
         if(this -> first -> value() == 1)
             return this -> second -> copy();
     }
@@ -175,9 +168,9 @@ expr* division::optimize(){
             return new int_literal( this -> first -> value() / this -> second -> value() );
     }
     if(this -> first -> type_check() == expr::func_type::monomial && this -> second -> type_check() == expr::func_type::monomial){
-        if(this -> first -> value() > this -> second -> value())
+        if(this -> first -> value() > this -> second -> value()) // exponent of numerator > denominator
             return new monomial( this -> first -> value() - this -> second -> value() );
-        else if(this -> first -> value() < this -> second -> value())
+        else if(this -> first -> value() < this -> second -> value()) // exponent of numerator < denominator
             return new division( new int_literal(1), new monomial( abs(this -> first -> value() - this -> second -> value()) ) );
         else
             return new int_literal(1);

@@ -17,7 +17,7 @@ class expr{
     virtual expr* optimize() = 0;
     virtual long value() const { return 0; };
     func_type type_check() { return type; };
-    virtual ~expr() {}
+    virtual ~expr() {} // virtual destructor
 };
 
 std::ostream& operator<<(std::ostream&, expr*);
@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream&, expr*);
 class int_literal : public expr {
     long int_val;
     public:
-    int_literal(long e): expr(expr::func_type::int_literal), int_val(e) {}
+    int_literal(long e): expr(expr::func_type::int_literal), int_val(e) {} // constructor
     double eval_at(long x) const override { return this -> int_val; };
     expr* derivative() const override { return new int_literal(0); };
     expr* copy() const override { return new int_literal(this -> int_val); };
@@ -51,10 +51,10 @@ class exp_var : public expr{
     expr* first;
     expr* second;
     public:
-    exp_var(expr* const first, expr* const second, expr::func_type t) : expr(t), first(first), second(second) {}
-    exp_var(exp_var const& other);
+    exp_var(expr* const first, expr* const second, expr::func_type t) : expr(t), first(first), second(second) {} // binary constructor
+    exp_var(exp_var const& other); // copy constructor
     virtual std::ostream& print(std::ostream&) const = 0;
-    ~exp_var() { delete first; delete second; }
+    ~exp_var() { delete first; delete second; } // destructor
 };
 
 class addition : public exp_var{

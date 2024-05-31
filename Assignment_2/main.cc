@@ -6,9 +6,7 @@ int main(){
     using namespace std;
     cout << "Enter expression: ";
     expr *e = parse(cin);
-    cout << "1 f(x) = " << e << endl;
     expr *e2 = e -> optimize();
-    cout << "2 f(x) = " << e2 << endl;
     delete e;
     expr *e3 = e2 -> optimize();
     delete e2;
