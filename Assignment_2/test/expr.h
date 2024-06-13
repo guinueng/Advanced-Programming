@@ -7,7 +7,15 @@
 class expr{
     protected:
     enum class func_type { int_literal, monomial, addition, multiplication, division } type;
-    expr(func_type t) : type(t) {}
+    union{
+        long int_val;
+        struct{
+            expr* first;
+            expr* second;
+        };
+    };
+    expr(func_type t, long e) : type(t), int_val(e) {}
+    expr(func_type t, expr* f, expr* s) : type(t), first(f), second(s) {}
     public:
     friend std::ostream& operator<<(std::ostream&, expr*);
     virtual std::ostream& print(std::ostream&) const = 0;
@@ -17,15 +25,14 @@ class expr{
     virtual expr* optimize() = 0;
     virtual long value() const { return 0; };
     func_type type_check() { return type; };
-    virtual ~expr() {}
+    virtual ~expr() {} // virtual destructor
 };
 
 std::ostream& operator<<(std::ostream&, expr*);
 
 class int_literal : public expr {
-    long int_val;
     public:
-    int_literal(long e): expr(expr::func_type::int_literal), int_val(e) {}
+    int_literal(long e): expr(expr::func_type::int_literal, e) {} // constructor
     double eval_at(long x) const override { return this -> int_val; };
     expr* derivative() const override { return new int_literal(0); };
     expr* copy() const override { return new int_literal(this -> int_val); };
@@ -35,27 +42,24 @@ class int_literal : public expr {
 };
 
 class monomial : public expr{
-    long exp;
     public:
-    monomial(long e) : expr(expr::func_type::monomial), exp(e) {}
-    double eval_at(long x) const override { return pow(x, this -> exp); };
+    monomial(long e) : expr(expr::func_type::monomial, e) {}
+    double eval_at(long x) const override { return pow(x, this -> int_val); };
     expr* derivative() const override;
-    expr* copy() const override { return new monomial(this -> exp); };
+    expr* copy() const override { return new monomial(this -> int_val); };
     expr* optimize() override { return this -> copy(); };
-    long value() const { return this -> exp; };
+    long value() const { return this -> int_val; };
     std::ostream& print(std::ostream& out) const;
 };
 
 class exp_var : public expr{
-    protected:
-    expr* first;
-    expr* second;
     public:
-    exp_var(expr* const first, expr* const second, expr::func_type t) : expr(t), first(first), second(second) {}
-    exp_var(exp_var const& other);
-    exp_var& operator=(exp_var const& other);
+    exp_var(expr* const first, expr* const second, expr::func_type t) : expr(t, first, second) {} // binary constructor
+    exp_var(exp_var const& other); // copy constructor
+    virtual expr* copy() const override = 0;
+    exp_var* operator=(expr const& other);
     virtual std::ostream& print(std::ostream&) const = 0;
-    ~exp_var() { delete first; delete second; }
+    ~exp_var() { delete first; delete second; } // destructor
 };
 
 class addition : public exp_var{

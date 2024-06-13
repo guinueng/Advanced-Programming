@@ -9,27 +9,23 @@ ostream& operator<<(ostream& out, expr* e){
 }
 
 std::ostream& monomial::print(std::ostream& out) const{
-    if(this -> exp >= 1){
+    if(this -> int_val != 0){
         out << "x";
-        if(this -> exp > 1)
-            out << this -> exp;
+        if(this -> int_val > 1)
+            out << this -> int_val;
     }
-    else if(this -> exp == 0)
+    else
         out << "1";
-    else{
-        out << "x" << this -> exp;
-    }
     return out;
 }
 
-exp_var::exp_var(exp_var const& other) : expr(other.type), first(other.first->copy()), second(other.second->copy()) {}
+exp_var::exp_var(exp_var const& other) : expr(other.type, other.first -> copy(), other.second -> copy()) {}
 
-exp_var& exp_var::operator=(exp_var const& other){
+exp_var* exp_var::operator=(expr const& other){
     delete this -> first;
     delete this -> second;
     this -> first = other.first -> copy();
     this -> second = other.second -> copy();
-    return *this;
 }
 
 ostream& addition::print(ostream& out) const{
@@ -103,8 +99,8 @@ expr* division::copy() const{
 }
 
 expr* monomial::derivative() const{
-    if(this -> exp != 1)
-        return new multiplication(new int_literal(this -> exp), new monomial(this -> exp - 1));
+    if(this -> int_val != 1)
+        return new multiplication(new int_literal(this -> int_val), new monomial(this -> int_val - 1));
     else
         return new int_literal(1);
 }
@@ -132,6 +128,13 @@ expr* division::derivative() const{
 }
 
 expr* addition::optimize(){
+    expr* first_tmp = this -> first -> optimize();
+    expr* second_tmp = this -> second -> optimize();
+    delete this -> first;
+    delete this -> second;
+    this -> first = first_tmp;
+    this -> second = second_tmp;
+
     if(this -> first -> type_check() == expr::func_type::int_literal){
         if(this -> second -> type_check() == expr::func_type::int_literal)
             return new int_literal( this -> first -> value() + this -> second -> value() );
@@ -150,12 +153,18 @@ expr* addition::optimize(){
 }
 
 expr* multiplication::optimize(){
+    expr* first_tmp = this -> first -> optimize();
+    expr* second_tmp = this -> second -> optimize();
+    delete this -> first;
+    delete this -> second;
+    this -> first = first_tmp;
+    this -> second = second_tmp;
+    
     if(this -> first -> type_check() == expr::func_type::int_literal){
         if(this -> first -> value() == 0)
             return new int_literal(0);
-        if(this -> second -> type_check() == expr::func_type::int_literal){
+        if(this -> second -> type_check() == expr::func_type::int_literal)
             return new int_literal( this -> first -> value() * this -> second -> value() );
-        }
         if(this -> first -> value() == 1)
             return this -> second -> copy();
     }
@@ -173,19 +182,55 @@ expr* multiplication::optimize(){
 }
 
 expr* division::optimize(){
+    expr* first_tmp = this -> first -> optimize();
+    expr* second_tmp = this -> second -> optimize();
+    delete this -> first;
+    delete this -> second;
+    this -> first = first_tmp;
+    this -> second = second_tmp;
+
     if(this -> first -> type_check() == expr::func_type::int_literal){
         if(this -> first -> value() == 0)
             return new int_literal(0);
         else if(this -> second -> type_check() == expr::func_type::int_literal)
             return new int_literal( this -> first -> value() / this -> second -> value() );
+        else{
+            if(this -> second -> first -> type_check() == expr::func_type::int_literal)
+                return new division(new division(this -> first -> copy(), this -> second -> first -> copy()), this -> second -> second -> copy());
+            if(this -> second -> second -> type_check() == expr::func_type::int_literal)
+                return new division(new division(this -> first -> copy(), this -> second -> second -> copy()), this -> second -> first -> copy());
+        }
     }
-    if(this -> first -> type_check() == expr::func_type::monomial && this -> second -> type_check() == expr::func_type::monomial){
-        if(this -> first -> value() > this -> second -> value())
-            return new monomial( this -> first -> value() - this -> second -> value() );
-        else if(this -> first -> value() < this -> second -> value())
-            return new division( new int_literal(1), new monomial( abs(this -> first -> value() - this -> second -> value()) ) );
-        else
-            return new int_literal(1);
+    else if(this -> first -> first -> type_check() == expr::func_type::int_literal){
+
+    }
+    if(this -> first -> type_check() == expr::func_type::monomial){
+        if(this -> second -> type_check() == expr::func_type::monomial){
+            if(this -> first -> value() > this -> second -> value()) // exponent of numerator > denominator
+                return new monomial( this -> first -> value() - this -> second -> value() );
+            else if(this -> first -> value() < this -> second -> value()) // exponent of numerator < denominator
+                return new division( new int_literal(1), new monomial( abs(this -> first -> value() - this -> second -> value()) ) );
+            else
+                return new int_literal(1);
+        }
+        else{
+            if(this -> second -> first -> type_check() == expr::func_type::monomial){
+                if(this -> first -> value() > this -> second -> first -> value()) // exponent of numerator > denominator
+                    return new division(new monomial( this -> first -> value() - this -> second -> first -> value() ), this -> second -> second -> copy());
+                else if(this -> first -> value() < this -> second -> value()) // exponent of numerator < denominator
+                    return new division( new int_literal(1), new multiplication(new monomial( abs(this -> first -> value() - this -> second -> value()) ), this -> second -> second -> copy()) );
+                else
+                    return new division(new int_literal(1), this -> second -> second -> copy());
+            }
+            if(this -> second -> first -> type_check() == expr::func_type::monomial){
+                if(this -> first -> value() > this -> second -> first -> value()) // exponent of numerator > denominator
+                    return new division(new monomial( this -> first -> value() - this -> second -> first -> value() ), this -> second -> second -> copy());
+                else if(this -> first -> value() < this -> second -> value()) // exponent of numerator < denominator
+                    return new division( new int_literal(1), new multiplication(new monomial( abs(this -> first -> value() - this -> second -> value()) ), this -> second -> second -> copy()) );
+                else
+                    return new division(new int_literal(1), this -> second -> second -> copy());
+            }
+        }
     }
 
     return new division( this -> first -> optimize(), this -> second -> optimize() );
